@@ -51,6 +51,12 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
+    users.users."zwave-js" = {
+      isSystemUser = true;
+      group = "dialout";
+      extraGroups = [ "tty" ];
+    };
+
     systemd.services."zwave-js-server" = {
       wantedBy = [ "multi-user.target" ];
       environment = { "ZWAVEJS_EXTERNAL_CONFIG" = "/var/lib/zwave-js/"; };
@@ -64,7 +70,8 @@ in {
           ExecStart = "${pkg}/bin/zwave-server ${cfg.device} --host ${cfg.host} --port ${toString cfg.port}" +
                       (lib.optionalString cfg.mock " --mock-driver") +
                       (lib.optionalString (!cfg.dns-sd) " --disable-dns-sd");
-          DynamicUser = "yes";
+          User = "zwave-js";
+          Group = "dialout";
           RuntimeDirectory = "zwave-js";
           RuntimeDirectoryMode = "0755";
           StateDirectory = "zwave-js";
